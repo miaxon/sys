@@ -5,7 +5,6 @@
 #include <unistd.h>
 #include <errno.h>
 #include <termios.h>
-#include <sys/select.h>
 #include <pty.h>
 #define BUF_SIZE 1024
 
