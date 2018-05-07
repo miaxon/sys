@@ -15,7 +15,7 @@ tty_reset(void)
 {
     if (tcsetattr(STDIN_FILENO, TCSANOW, &tty_orig) == -1) {
         perror("tcsetattr");
-		exit(EXIT_FAILURE);
+        exit(EXIT_FAILURE);
 	}
 }
 
@@ -26,17 +26,17 @@ FILE* unbuff_popen(char* cmd, char* arg[], char* env[]) {
     
     if (tcgetattr(STDIN_FILENO, &tty_orig) == -1) {
         perror("tcgetattr");
-		return NULL;
+        return NULL;
 	}
     if (ioctl(STDIN_FILENO, TIOCGWINSZ, (char *) &ws) < 0) {
         perror("TIOCGWINSZ error");
-		return NULL;
+        return NULL;
 	}
 
     switch (forkpty(&pty, NULL, &tty_orig, &ws)) {
         case -1:
             perror("pty fork");
-			return NULL;
+            return NULL;
         case 0:
             execve(cmd, arg, env);
             perror("execve");
@@ -44,7 +44,7 @@ FILE* unbuff_popen(char* cmd, char* arg[], char* env[]) {
 
             if (atexit(tty_reset) != 0) {
                 perror("atexit");
-				return NULL;
+                return NULL;
 			}
 
             return fdopen(pty, "r");
