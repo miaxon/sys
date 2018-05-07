@@ -9,37 +9,37 @@
 #include <pty.h>
 #define BUF_SIZE 1024
 
-struct termios ttyOrig;
+struct termios tty_orig;
 
 static void             /* Reset terminal mode on program exit */
-ttyReset(void)
+tty_reset(void)
 {
-    if (tcsetattr(STDIN_FILENO, TCSANOW, &ttyOrig) == -1)
+    if (tcsetattr(STDIN_FILENO, TCSANOW, &tty_orig) == -1)
         perror("tcsetattr");
 }
 
 FILE* unbuff_popen(char* cmd, char* arg[], char* env[]) {
     
-    int masterFd;
+    int pty;
     struct winsize ws;
     
-    if (tcgetattr(STDIN_FILENO, &ttyOrig) == -1)
+    if (tcgetattr(STDIN_FILENO, &tty_orig) == -1)
         perror("tcgetattr");
     if (ioctl(STDIN_FILENO, TIOCGWINSZ, (char *) &ws) < 0)
         perror("TIOCGWINSZ error");
 
-    switch (forkpty(&masterFd, NULL, &ttyOrig, &ws)) {
+    switch (forkpty(&pty, NULL, &tty_orig, &ws)) {
         case -1:
-            perror("ptyFork");
+            perror("pty fork");
         case 0:
                 execve(cmd, arg, env);
                 perror("execve");
         default:    /* Parent*/
 
-            if (atexit(ttyReset) != 0)
+            if (atexit(tty_reset) != 0)
                 perror("atexit");
 
-            return fdopen(masterFd, "r");
+            return fdopen(pty, "r");
     }
 }
 int
@@ -48,7 +48,7 @@ main(int argc, char *argv[])
     char buf[BUF_SIZE];
     char *arg[] = {argv[1], argv[2], NULL };
     char *env[] = { NULL };
-    FILE* fd = unbuff_popen(argv[1], arg, env);
-    while(fgets( buf, BUF_SIZE, fd))
+    FILE* fp = unbuff_popen(argv[1], arg, env);
+    while(fgets( buf, BUF_SIZE, fp))
         printf("out: %s", buf);
 }
