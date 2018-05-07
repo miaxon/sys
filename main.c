@@ -59,7 +59,7 @@ main(int argc, char *argv[])
     FILE* fp = unbuff_popen(argv[1], arg, env);
 	if(fp) {
         while(fgets( buf, BUF_SIZE, fp))
-            printf("out: %s", buf);
+            printf("pop out: %s", buf);
 	}
 	return 0;
 }

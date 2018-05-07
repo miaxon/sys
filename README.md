@@ -5,4 +5,4 @@ Run:
 
 make
 
-./prog <path_to_exe> <arg>
+./pop <prog> <arg>

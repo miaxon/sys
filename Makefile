@@ -1,4 +1,4 @@
 default:
-	cc -o prog main.c -lutil
+	cc -o pop main.c -lutil
 clean:
-	rm prog
+	rm pop
