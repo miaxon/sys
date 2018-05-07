@@ -1,5 +1,3 @@
-// gcc -o prog main.c -lutil
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -10,7 +8,7 @@
 
 struct termios tty_orig;
 
-static void             /* Reset terminal mode on program exit */
+static void
 tty_reset(void)
 {
     if (tcsetattr(STDIN_FILENO, TCSANOW, &tty_orig) == -1) {
@@ -20,10 +18,10 @@ tty_reset(void)
 }
 
 FILE* unbuff_popen(char* cmd, char* arg[], char* env[]) {
-    
+
     int pty;
     struct winsize ws;
-    
+
     if (tcgetattr(STDIN_FILENO, &tty_orig) == -1) {
         perror("tcgetattr");
         return NULL;
@@ -40,8 +38,7 @@ FILE* unbuff_popen(char* cmd, char* arg[], char* env[]) {
         case 0:
             execve(cmd, arg, env);
             perror("execve");
-        default:    /* Parent*/
-
+        default:
             if (atexit(tty_reset) != 0) {
                 perror("atexit");
                 return NULL;
