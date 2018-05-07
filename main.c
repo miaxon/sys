@@ -45,7 +45,7 @@ FILE* unbuff_popen(char* cmd, char* arg[], char* env[]) {
             if (atexit(tty_reset) != 0) {
                 perror("atexit");
                 return NULL;
-			}
+            }
 
             return fdopen(pty, "r");
     }
