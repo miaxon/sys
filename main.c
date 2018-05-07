@@ -18,12 +18,9 @@ ttyReset(void)
         perror("tcsetattr");
 }
 
-FILE* run(char* cmd, char* arg[], char* env[]) {
+FILE* unbuff_popen(char* cmd, char* arg[], char* env[]) {
     
-    int slaveFd;
     int masterFd;
-    
-    
     struct winsize ws;
     
     if (tcgetattr(STDIN_FILENO, &ttyOrig) == -1)
@@ -31,28 +28,12 @@ FILE* run(char* cmd, char* arg[], char* env[]) {
     if (ioctl(STDIN_FILENO, TIOCGWINSZ, (char *) &ws) < 0)
         perror("TIOCGWINSZ error");
 
-    openpty(&masterFd, &slaveFd, NULL, &ttyOrig, &ws);
-    switch (fork()) {
+    switch (forkpty(&masterFd, NULL, &ttyOrig, &ws)) {
         case -1:
             perror("ptyFork");
         case 0:
-            close(masterFd);
-            if (setsid() == -1)               
-                perror("ptyFork:setsid");        
-            if (slaveFd == -1)
-                perror("ptyFork:open-slave");
-            if (ioctl(slaveFd, TIOCSCTTY, 0) == -1)
-                perror("ptyFork:ioctl-TIOCSCTTY");
-            if (dup2(slaveFd, STDIN_FILENO) != STDIN_FILENO)
-                perror("ptyFork:dup2-STDIN_FILENO");
-            if (dup2(slaveFd, STDOUT_FILENO) != STDOUT_FILENO)
-                perror("ptyFork:dup2-STDOUT_FILENO");
-            if (dup2(slaveFd, STDERR_FILENO) != STDERR_FILENO)
-                perror("ptyFork:dup2-STDERR_FILENO");
-            if (slaveFd > STDERR_FILENO)       
-                close(slaveFd); 
                 execve(cmd, arg, env);
-                perror("execvp");
+                perror("execve");
         default:    /* Parent*/
 
             if (atexit(ttyReset) != 0)
@@ -67,7 +48,7 @@ main(int argc, char *argv[])
     char buf[BUF_SIZE];
     char *arg[] = {argv[1], argv[2], NULL };
     char *env[] = { NULL };
-    FILE* fd = run(argv[1], arg, env);
+    FILE* fd = unbuff_popen(argv[1], arg, env);
     while(fgets( buf, BUF_SIZE, fd))
         printf("out: %s", buf);
 }
