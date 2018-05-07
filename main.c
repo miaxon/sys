@@ -58,8 +58,8 @@ main(int argc, char *argv[])
     char *env[] = { NULL };
     FILE* fp = unbuff_popen(argv[1], arg, env);
 	if(fp) {
-    	while(fgets( buf, BUF_SIZE, fp))
-        	printf("out: %s", buf);
+        while(fgets( buf, BUF_SIZE, fp))
+            printf("out: %s", buf);
 	}
 	return 0;
 }
