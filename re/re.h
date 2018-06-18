@@ -1,8 +1,5 @@
 #ifndef RE_H
 #define RE_H
-#include <string.h>
-#include <regex.h>
-
 
 #define RE_MAX_MATCHES 30
 #define RE_BUF_SIZE 128
