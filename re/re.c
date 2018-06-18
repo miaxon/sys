@@ -28,20 +28,20 @@ re_match(const char *re, const char *str, rematch_t *res) {
         return -1;
     
     const char *p = str;
-    const int n_matches = RE_MAX_MATCHES;
-    regmatch_t m[n_matches];
-    int i, start, finish;
-    while(!regexec(&r, p, n_matches, m, 0)) {
-        for (i = 0; i < n_matches; i++) {            
-            if (m[i].rm_so == -1) break;            
-            start = m[i].rm_so + (p - str);
-            finish = m[i].rm_eo + (p - str);
-            int len = finish - start;
-            strncpy(res[i].buf, str + start, (len < RE_BUF_SIZE) ? len : RE_BUF_SIZE);
-        }
-        
+    const int N = RE_MAX_MATCHES;
+    int n = 0, len;
+    regmatch_t m[N];
+
+    while(!regexec(&r, p, N, m, 0)) {
+        for (int i = 0; i < N; i++) {            
+            if (m[i].rm_so == -1) 
+                break;            
+            len = m[i].rm_eo - m[i].rm_so;
+            strncpy(res[i].buf, p + m[i].rm_so, (len < RE_BUF_SIZE) ? len : RE_BUF_SIZE);
+            n++;
+        }        
         p += m[0].rm_eo;
     }
     regfree(&r);
-    return i;
+    return n;
 }
