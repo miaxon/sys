@@ -36,7 +36,8 @@ re_match(const char *re, const char *str, rematch_t *res) {
             if (m[i].rm_so == -1) break;            
             start = m[i].rm_so + (p - str);
             finish = m[i].rm_eo + (p - str);
-            strncpy(res[i].buf, str + start, finish - start);
+            int len = finish - start;
+            strncpy(res[i].buf, str + start, (len < RE_BUF_SIZE) ? len : RE_BUF_SIZE);
         }
         
         p += m[0].rm_eo;
