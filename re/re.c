@@ -41,5 +41,6 @@ re_match(const char *re, const char *str, rematch_t *res) {
         
         p += m[0].rm_eo;
     }
+    regfree(&r);
     return i;
 }
