@@ -6,11 +6,11 @@ PROGS  := main
 all: $(PROGS)
 
 main: re.o main.o
-	cc  $^ -o $@
+	gcc  $^ -o $@
 main.o: main.c
-	cc $(CFLAGS) -c $^
+	gcc $(CFLAGS) -c $^
 re.o: re.c
-	cc $(CFLAGS) -c $^
+	gcc $(CFLAGS) -c $^
 clean:
 	@- rm *.o $(PROGS) 
 

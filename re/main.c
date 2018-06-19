@@ -1,6 +1,20 @@
 #include <stdio.h>
 #include <string.h>
 #include "re.h"
+#include "re_ewebfminer-0.3.4b.h"
+
+static const char *zec_out[] = 
+{
+    "bla-bla",
+    "INFO: Current pool: eu1-zcash.flypool.org:3333",
+    "CUDA: Device: 0 GeForce GTX 1060 3GB, 3019 MB i:64",
+    "GPU0: 277 Sol/s GPU1: 178 Sol/s ",
+    "Total speed: 455 Sol/s",
+    "bla-bla",
+    "|  0  |    107W     |  2.59 Sol/W  |",
+    "|  1  |    200W     |  6.89 Sol/W  |"
+};
+#define ZEC_OUT_SIZE (sizeof(zec_out)/sizeof(const char*))
 
 void
 print_result(rematch_t *result, int len) {
@@ -172,7 +186,16 @@ zec(void) {
 
 int
 main() {
-    zm();
-    zec();
+    //zm();
+    //zec();
+    rematch_t result[RE_MAX_MATCHES];
+    int n;
+    //
+    printf("parse %ld lines\n", ZEC_OUT_SIZE);
+    for(int i = 0; i < ZEC_OUT_SIZE; i++) {
+        memset(&result, 0, sizeof result);
+        n = re_parse(&context, zec_out[i], result);
+        print_result(result, n);
+    }
     return 0;    
 }

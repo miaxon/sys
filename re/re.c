@@ -9,9 +9,15 @@
 static int re_compile (regex_t * r, const char * regex_text);
 
 static int
-re_compile (regex_t * r, const char * regex_text) {
+re_compile (regex_t * r, const char *regex_text) {
     int status;
-    if ( (status = regcomp (r, regex_text, REG_EXTENDED | REG_NEWLINE)) != 0) {
+    
+    if(!regex_text || !strlen(regex_text)) {
+        printf("re_compile error: regex_text is mull or empty\n");
+        return 1;
+    }
+    
+    if ( (status = regcomp(r, regex_text, REG_EXTENDED | REG_NEWLINE)) != 0) {
         char error_message[RE_MAX_ERROR_MSG];
         regerror (status, r, error_message, RE_MAX_ERROR_MSG);
         printf("Regex error compiling %s: %s\n",
@@ -43,5 +49,39 @@ re_match(const char *re, const char *str, rematch_t *res) {
         p += m[0].rm_eo;
     }
     regfree(&r);
+    
+    return n;
+}
+
+int 
+re_parse(re_context *ctx, const char *str, rematch_t *res) {
+
+    
+    int n = 0;
+    
+    if(ctx->init_count < ctx->init_size) {
+        const char *re = ctx->re_init[ctx->init_count];
+        if( (n = re_match(re, str, res)) > 0) {
+            ctx->init_count++;            
+        }
+        return n;
+    }
+    
+    for(int i = 0; i < ctx->info_size; i++) {
+        const char *re = ctx->re_info[i];
+        if( (n = re_match(re, str, res)) > 0) {
+            break;            
+        }
+    }
+    
+    if(n == 0) {
+        for(int i = 0; i < ctx->error_size; i++) {
+            const char *re = ctx->re_error[i];
+            if( (n = re_match(re, str, res)) > 0) {
+                break;            
+            }
+        }
+    }
+    
     return n;
 }
