@@ -10,8 +10,8 @@ print_result(rematch_t *result, int len) {
     }
 }
 
-int
-main() {
+void
+zm(void) {
     char *re, *str;
     rematch_t result[RE_MAX_MATCHES];
     int n;
@@ -94,7 +94,59 @@ main() {
     n = re_match(re, str, result);
     if(n != -1)
         print_result(result, n);
+}
 
+void
+zec(void) {
+    char *re, *str;
+    rematch_t result[RE_MAX_MATCHES];
+    int n;
+    //
+    memset(&result, 0, sizeof result);
+    str = "INFO: Current pool: eu1-zcash.flypool.org:3333";
+    re = "^INFO:.+(pool):\\W+(.+)\\W?";
+
+    n = re_match(re, str, result);
+    if(n != -1)
+        print_result(result, n);
+    //
+    memset(&result, 0, sizeof result);
+    str = "CUDA: Device: 0 GeForce GTX 1060 3GB, 3019 MB i:64";
+    re = "^CUDA:.+Device:\\s([0-9]{1,2})\\s(.+GTX\\s)([0-9]+)\\s([0-9]+GB).+\W?";
+
+    n = re_match(re, str, result);
+    if(n != -1)
+        print_result(result, n);
+    //
+    memset(&result, 0, sizeof result);
+    str = "GPU0: 277 Sol/s GPU1: 178 Sol/s ";
+    re = "^GPU([0-9]+):\\s([0-9]+)\\s(\\w+\\W?\\w+)\\s+GPU([0-9]+):\\s([0-9]+)\\s(\\w+\\W?\\w+)\\W?";
+
+    n = re_match(re, str, result);
+    if(n != -1)
+        print_result(result, n);
+    //
+    memset(&result, 0, sizeof result);
+    str = "Total speed: 455 Sol/s";
+    re = "^Total speed:\\s([0-9]+)\\s(\\w+\\W?\\w+)\\W?";
+
+    n = re_match(re, str, result);
+    if(n != -1)
+        print_result(result, n);
+    //
+    memset(&result, 0, sizeof result);
+    str = "|  0  |    107W     |  2.59 Sol/W  |";
+    re = "^\\|\\s+([0-9]+)\\s+\\|\\s+([0-9]+)(\\w+)\\s+\\|\\s+([0-9]+\\.[0-9]+)\\s(\\w+\\W?\\w+)\\s+\\W?";
+
+    n = re_match(re, str, result);
+    if(n != -1)
+        print_result(result, n);
+}
+
+int
+main() {
+    //zm();
+    zec();
     return 0;
     
 }
