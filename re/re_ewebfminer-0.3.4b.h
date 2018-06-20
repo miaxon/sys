@@ -7,39 +7,25 @@
 static const char *init[] = 
 {
     //"INFO: Current pool: eu1-zcash.flypool.org:3333"
-    "^"
-    "INFO:.+(pool):\\s+"
-    "(.+)\\W?",
+    "^INFO: Current pool:\\s(.+)",
     
     // "CUDA: Device: 0 GeForce GTX 1060 3GB, 3019 MB i:64"
-    "^"
-    "CUDA:.+Device:\\s"
-    "([0-9]+)\\s+"
-    "(.+),.+\\W?"
+    "^CUDA: Device:\\s([0-9]+)\\s(.+),"
 };
 #define INIT_SIZE (sizeof(init)/sizeof(const char*))
 
 static const char *info[] = 
 {
     // "GPU0: 277 Sol/s GPU1: 178 Sol/s " 
-    "GPU(([0-9]+):\\s"
-    "([0-9]+)\\s"
-    "(\\w+\\W?\\w+)\\W?)+",
+    "([0-9]+)\\W+([0-9]+)\\sSol\\/s",
     
     // "Total speed: 455 Sol/s"
-    "^"
-    "Total speed:\\s"
-    "([0-9]+)\\s"
-    "(\\w+\\W?\\w+)\\W?",
-    // 3 fields
+    //"^Total speed:\\s([0-9]+)\\sSol\\/s",
     
     // "|  0  |    107W     |  2.59 Sol/W  |"
-    "^"
-    "\\|\\s+([0-9]+)\\s+"
-    "\\|\\s+([0-9]+)(\\w+)\\s+"
-    "\\|\\s+([0-9]+\\.[0-9]+)\\s"
-    "(\\w+\\W?\\w+)\\s+"
-    "\\|\\W?"
+    //"^\\|\\s+([0-9]+)\\s+"
+    //"\\|\\s+([0-9]+)W\\s+"
+    //"\\|\\s+([0-9]+\\.[0-9]+)\\sSol\\/W"
     
 };
 #define INFO_SIZE (sizeof(info)/sizeof(const char*))
@@ -57,7 +43,8 @@ re_context context =
     init,
     info,
     error,
-    0    
+    INIT,
+    0
 };
 
 #endif /* RE_EWEBFMINER_0_3_4B_H */
