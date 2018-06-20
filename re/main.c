@@ -3,32 +3,27 @@
 #include "re.h"
 #include "re_ewebfminer-0.3.4b.h"
 
-static const char *zec_out[] = 
-{
-    "bla-bla",
-    "INFO: Current pool: eu1-zcash.flypool.org:3333",
-    "CUDA: Device: 0 GeForce GTX 1060 3GB, 3019 MB i:64",
-    "GPU0: 277 Sol/s GPU1: 178 Sol/s ",
-    "Total speed: 455 Sol/s",
-    "bla-bla",
-    "|  0  |    107W     |  2.59 Sol/W  |",
-    "|  1  |    200W     |  6.89 Sol/W  |"
-};
-#define ZEC_OUT_SIZE (sizeof(zec_out)/sizeof(const char*))
 
 void
-print_result(rematch_t *result, int len) {
-    if( len == -1) {
-        printf("re_match failed!\n");
+print_result(const char *str, re_context *ctx, int n_re, rematch_t *result) {
+    
+    
+    if(n_re == -1)        
         return;
+    
+    char* target = (ctx->target == INIT)? "INIT" : "INFO";
+    printf("out string '%s', target %s, match %d, error %d\n", str, target, n_re, ctx->error);
+    
+    for(int i = 0; i < RE_MAX_MATCHES; i++) {
+        if(!strlen(result[i].buf))
+            break;
+        
+        printf("\t%s ", result[i].buf);
     }
-    printf("found %d matches:\n", len);
-    for(int i = 0; i < len; i++) {
-        printf("\t%s\n", result[i].buf);
-    }
+    printf("\n========================\n");
 }
 
-void
+/*void
 zm(void) {
     char *re, *str;
     rematch_t result[RE_MAX_MATCHES]; // result[0] contains full matched string
@@ -183,19 +178,27 @@ zec(void) {
     n = re_match(re, str, result);
     print_result(result, n);
 }
-
+*/
 int
 main() {
     //zm();
     //zec();
+    char buf[128] = {0};
     rematch_t result[RE_MAX_MATCHES];
-    int n;
+    int n_re;
     //
-    printf("parse %ld lines\n", ZEC_OUT_SIZE);
-    for(int i = 0; i < ZEC_OUT_SIZE; i++) {
-        memset(&result, 0, sizeof result);
-        n = re_parse(&context, zec_out[i], result);
-        print_result(result, n);
+    printf("parse zec.out\n");
+    FILE* fp = fopen("zec.out", "r");
+    if(!fp) {
+        printf("fopen failed\n");
+        return 0;
     }
+    
+    while(fgets(buf, 128, fp)) {
+        memset(&result, 0, sizeof result);
+        n_re = re_parse(&context, buf, result);        
+        print_result(buf, &context, n_re, result);
+    }
+    fclose(fp);
     return 0;    
 }

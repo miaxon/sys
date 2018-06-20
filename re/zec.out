@@ -1,0 +1,107 @@
+
+ 
++-------------------------------------------------+
+|         EWBF's Zcash CUDA miner. 0.3.4b         |
++-------------------------------------------------+
+INFO: Used config file: miner.cfg
+INFO: Current pool: eu1-zcash.flypool.org:3333
+INFO: Selected pools: 4
+INFO: Solver: Auto.
+INFO: Devices: All.
+INFO: Temperature limit: 75
+INFO: Api: Listen on 127.0.0.1:42000
+---------------------------------------------------
+INFO: Target: 0000aec33e1f6715...
+CUDA: Device: 0 GeForce GTX 1060 3GB, 3019 MB i:64
+CUDA: Device: 1 GeForce GTX 1050 Ti, 4040 MB i:64
+INFO: Detected new work: 4da0a05355ce97f27836
+INFO: Detected new work: 553f02cfbc9b81e00181
+CUDA: Device: 0 Selected solver: 0
+CUDA: Device: 1 Selected solver: 0
+Temp: GPU0: 69C GPU1: 62C 
+GPU0: 277 Sol/s GPU1: 178 Sol/s 
+Total speed: 455 Sol/s
++-----+-------------+--------------+
+| GPU | Power usage |  Efficiency  |                                                                                         
++-----+-------------+--------------+                                                                                         
+|  0  |    107W     |  2.59 Sol/W  |                                                                                         
+|  1  |      0W     |  0.00 Sol/W  |                                                                                         
++-----+-------------+--------------+                                                                                         
+Temp: GPU0: 71C GPU1: 62C 
+GPU0: 275 Sol/s GPU1: 173 Sol/s 
+Total speed: 448 Sol/s
++-----+-------------+--------------+
+| GPU | Power usage |  Efficiency  |                                                                                         
++-----+-------------+--------------+                                                                                         
+|  0  |    106W     |  2.59 Sol/W  |                                                                                         
+|  1  |      0W     |  0.00 Sol/W  |                                                                                         
++-----+-------------+--------------+                                                                                         
+Temp: GPU0: 71C GPU1: 61C 
+GPU0: 275 Sol/s GPU1: 174 Sol/s 
+Total speed: 449 Sol/s
++-----+-------------+--------------+
+| GPU | Power usage |  Efficiency  |                                                                                         
++-----+-------------+--------------+                                                                                         
+|  0  |    107W     |  2.57 Sol/W  |                                                                                         
+|  1  |      0W     |  0.00 Sol/W  |                                                                                         
++-----+-------------+--------------+                                                                                         
+Temp: GPU0: 72C GPU1: 60C 
+GPU0: 278 Sol/s GPU1: 174 Sol/s 
+Total speed: 452 Sol/s
++-----+-------------+--------------+
+| GPU | Power usage |  Efficiency  |                                                                                         
++-----+-------------+--------------+                                                                                         
+|  0  |    106W     |  2.62 Sol/W  |                                                                                         
+|  1  |      0W     |  0.00 Sol/W  |                                                                                         
++-----+-------------+--------------+                                                                                         
+Temp: GPU0: 72C GPU1: 59C 
+GPU0: 271 Sol/s GPU1: 177 Sol/s 
+Total speed: 448 Sol/s
++-----+-------------+--------------+
+| GPU | Power usage |  Efficiency  |                                                                                         
++-----+-------------+--------------+                                                                                         
+|  0  |    106W     |  2.56 Sol/W  |                                                                                         
+|  1  |      0W     |  0.00 Sol/W  |
+|  2  |      0W     |  0.00 Sol/W  |                                                                                         
++-----+-------------+--------------+                                                                                         
+INFO: Detected new work: ef03466ddce9d364b35f
+Temp: GPU0: 72C GPU1: 59C 
+GPU0: 279 Sol/s GPU1: 173 Sol/s 
+Total speed: 452 Sol/s
++-----+-------------+--------------+
+| GPU | Power usage |  Efficiency  |                                                                                         
++-----+-------------+--------------+
+|  0  |    106W     |  2.63 Sol/W  |
+|  1  |      0W     |  0.00 Sol/W  |
+|  2  |      0W     |  0.00 Sol/W  |
++-----+-------------+--------------+
+Temp: GPU0: 72C GPU1: 59C 
+GPU0: 278 Sol/s GPU1: 177 Sol/s 
+Total speed: 455 Sol/s
++-----+-------------+--------------+
+| GPU | Power usage |  Efficiency  |
++-----+-------------+--------------+
+|  0  |    105W     |  2.65 Sol/W  |
+|  1  |      0W     |  0.00 Sol/W  |
+|  2  |      0W     |  0.00 Sol/W  |
++-----+-------------+--------------+
+Temp: GPU0: 71C GPU1: 59C 
+GPU0: 276 Sol/s GPU1: 174 Sol/s 
+Total speed: 450 Sol/s
++-----+-------------+--------------+
+| GPU | Power usage |  Efficiency  |
++-----+-------------+--------------+
+|  0  |    106W     |  2.60 Sol/W  |
+|  1  |      0W     |  0.00 Sol/W  |
+|  2  |      0W     |  0.00 Sol/W  |
++-----+-------------+--------------+
+Temp: GPU0: 71C GPU1: 59C 
+GPU0: 274 Sol/s GPU1: 172 Sol/s 
+Total speed: 446 Sol/s
++-----+-------------+--------------+
+| GPU | Power usage |  Efficiency  |
++-----+-------------+--------------+
+|  0  |    105W     |  2.61 Sol/W  |
+|  1  |      0W     |  0.00 Sol/W  |
+|  2  |      0W     |  0.00 Sol/W  |
++-----+-------------+--------------+
