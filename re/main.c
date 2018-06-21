@@ -1,9 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "re.h"
-#include "re_ewebfminer-0.3.4b.h"
-#include "miner_info.h"
+//#include "ewebfminer-0.3.4b.h"
+#include "dstmminer64-0.6.0.h"
 
 void
 print_result(const char *str, re_context *ctx, int n_re, rematch_t *result) {
@@ -24,75 +23,33 @@ print_result(const char *str, re_context *ctx, int n_re, rematch_t *result) {
     printf("\n========================\n");
 }
 
-void ewebfminer_0_3_4b(char *buf, miner_info_t *mi) {
-    int n_match;
-    rematch_t result[RE_MAX_MATCHES];
-    memset(&result, 0, sizeof result);
-    n_match = re_parse(&context, buf, result);
-    //print_result(buf, &context, n_re, result);return;
-
-    if(n_match != -1) {
-        switch(context.target) {
-            case INIT: // init re array
-                switch(n_match) {
-                    case 0: // pool
-                    {
-                        strncpy(mi->pool, result[0].buf, 64);
-                    }
-                        break;
-                    case 1:// gpu device
-                    {
-                        int n = atoi(result[0].buf);
-                        gpu_info_t *gi = &mi->gpus[n];
-                        memset(gi, 0, sizeof *gi);
-                        strncpy(gi->name, result[1].buf, 128);
-                        mi->ngpu++;
-                    }
-                }
-                break;
-            case INFO: // info re array
-                switch(n_match) {
-                    case 0: // hashrate
-                    {
-                        int i = 0;
-                        do {
-                            int n = atoi(result[i].buf);
-                            gpu_info_t *gi = &mi->gpus[n];
-                            gi->hashrate = atof(result[i + 1].buf);
-                            i += 2;
-                        } while(strlen(result[i].buf));
-                    }
-                        break;
-
-                }
-                break;
-        }
-
-        printf("miner: %s pool: %s ngpu: %d\n", mi->name, mi->pool, mi->ngpu);
-        for(int i = 0; i < mi->ngpu; i++) {
-            gpu_info_t *gi = &mi->gpus[i];
-            printf("GPU%d: %s %.2f Sol/s\n", i, gi->name, gi->hashrate);
-        }
-        printf(">>>>>>>>>>>>\n");
+void
+print_miner_info(const miner_info_t *mi) {
+    printf("miner: %s pool: %s ngpu: %d\n", mi->name, mi->pool, mi->ngpu);
+    for(int i = 0; i < mi->ngpu; i++) {
+        const gpu_info_t *gi = &mi->gpus[i];
+        printf("pci: %s\tGPU%d: %s\t%.2f Sol/s\n", gi->pci, i, gi->name, gi->hashrate);
     }
+    printf(">>>>>>>>>>>>\n");
 }
 
 int
 main() {
-    char buf[128] = {0};
+
+    printf("parse %s\n", LOG_FILE);
+    char buf[128];
     miner_info_t mi;
-    memset(&mi, 0, sizeof mi);
-    strncpy(mi.name, "ewebfminer_0_3_4b", 64);
-    //
-    printf("parse 'zec.out'\n");
-    FILE* fp = fopen("zec.out", "r");
+    strncpy(mi.name, MINER_NAME, 64);
+
+    FILE* fp = fopen(LOG_FILE, "r");
     if(!fp) {
         printf("fopen failed\n");
         return 0;
     }
 
     while(fgets(buf, 128, fp)) {
-        ewebfminer_0_3_4b(buf, &mi);
+        if(parse(buf, &mi) != -1)
+            print_miner_info(&mi);
     }
     fclose(fp);
     return 0;
