@@ -7,8 +7,10 @@
 #include "re.h"
 
 #define MINER_NAME "ewebfminer-0.3.4b"
+#define MAX_LINE_LENGTH 128
 #define LOG_FILE "zec.out"
 
+// массив регулярок для парсинга "шапки" выхлопа майнера
 static const char *init[] = 
 {
     //"INFO: Current pool: eu1-zcash.flypool.org:3333"
@@ -19,6 +21,7 @@ static const char *init[] =
 };
 #define INIT_SIZE (sizeof(init)/sizeof(const char*))
 
+// массив регулярок для парсинга диагностических сообщений в выхлопе майнера
 static const char *info[] = 
 {
     // "GPU0: 277 Sol/s GPU1: 178 Sol/s " 
@@ -35,25 +38,34 @@ static const char *info[] =
 };
 #define INFO_SIZE (sizeof(info)/sizeof(const char*))
 
+// массив регулярок для парсинга сообщений об ошибках в выхлопе майнера
 static const char *error[] = {
     "error message template"
 };
 #define ERROR_SIZE (sizeof(error)/sizeof(const char*))
 
+// контекст парсинга выхлопа
 re_context context = 
 {
-    INIT_SIZE,
-    INFO_SIZE,
-    ERROR_SIZE,
-    init,
-    info,
-    error,
-    INIT,
-    0
+    .init_size  = INIT_SIZE,
+    .info_size  = INFO_SIZE,
+    .error_size = ERROR_SIZE,
+    .re_init    = init,
+    .re_info    = info,
+    .re_error   = error,
+    .target     = INIT,
+    .error      = 0
 };
 
-int
-parse(char *buf, miner_info_t * mi) {
+// структура с информацией из выхлопа
+miner_info_t mi = 
+{
+    .name = MINER_NAME,
+    .pool = {0}
+};
+
+miner_info_t *
+parse(char *buf) {
     int n_match;
     rematch_t result[RE_MAX_MATCHES] = {0};
     n_match = re_parse(&context, buf, result);
@@ -63,15 +75,15 @@ parse(char *buf, miner_info_t * mi) {
             case INIT: // init re array
                 switch(n_match) {
                     case 0: // pool
-                        strncpy(mi->pool, result[0].buf, 64);
+                        strncpy(mi.pool, result[0].buf, MI_POOL_LEN - 1);
                         break;
                     case 1:// gpu device
                     {
                         int n = atoi(result[0].buf);
-                        gpu_info_t *gi = &mi->gpus[n];
+                        gpu_info_t *gi = &mi.gpus[n];
                         memset(gi, 0, sizeof *gi);
-                        strncpy(gi->name, result[1].buf, 128);
-                        mi->ngpu++;
+                        strncpy(gi->name, result[1].buf, MI_GPUNAME_LEN - 1);
+                        mi.ngpu++;
                     }
                 }
                 break;
@@ -82,7 +94,7 @@ parse(char *buf, miner_info_t * mi) {
                         int i = 0;
                         do {
                             int n = atoi(result[i++].buf);
-                            gpu_info_t *gi = &mi->gpus[n];
+                            gpu_info_t *gi = &mi.gpus[n];
                             gi->hashrate = atof(result[i++].buf);
                         } while(strlen(result[i].buf));
                     }
@@ -91,9 +103,11 @@ parse(char *buf, miner_info_t * mi) {
                 }
                 break;
         }
+        return &mi;
     }
-    return n_match;
+    return NULL;
 }
+
 
 #endif /* RE_EWEBFMINER_0_3_4B_H */
 
