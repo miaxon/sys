@@ -9,6 +9,25 @@
 static int re_compile(regex_t * r, const char * regex_text);
 static int re_match(const char *re, const char *str, rematch_t *res);
 
+void
+re_dump_result(const char *str, re_context *ctx, int n_re, rematch_t *result) {
+    if(n_re == -1)
+        return;
+
+    char* target = (ctx->target == INIT) ? "INIT" : "INFO";
+    printf("out string '%s', target %s, match %d, error %d\n", str, target, n_re, ctx->error);
+
+    printf("[");
+    for(int i = 0; i < RE_MAX_MATCHES; i++) {
+        if(!strlen(result[i].buf)) {
+            printf("\b\b]");
+            break;
+        }
+        printf("%s, ", result[i].buf);
+    }
+    printf("\n========================\n");
+}
+
 static int
 re_compile(regex_t * r, const char *regex_text) {
     int status;
@@ -45,7 +64,7 @@ re_match(const char *re, const char *str, rematch_t *res) {
                 break;
             if(i > 0) {
                 len = m[i].rm_eo - m[i].rm_so;
-                strncpy(res[n++].buf, p + m[i].rm_so, (len < RE_BUF_SIZE) ? len : RE_BUF_SIZE);
+                strncpy(res[n++].buf, p + m[i].rm_so, (len < RE_MAX_MATCH_SIZE) ? len : RE_MAX_MATCH_SIZE - 1);
             }
         }
         p += m[0].rm_eo;
