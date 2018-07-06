@@ -76,11 +76,12 @@ static FILE* cmd_out(const char *cmd) {
 
 static void get_cpuinfo(void) {
 	// parse cpuinfo
-	FILE* fp = get_file(PATH_PROC_CPUINFO);
+	FILE* fp;
 	char buf [SYS_STRLEN_1];
 	char freq[SYS_STRLEN_1];
 	char path[FILENAME_MAX];
 	
+	fp = get_file(PATH_PROC_CPUINFO);
 	
 	while(fgets(buf, sizeof(buf), fp) != NULL) {
 		     if (lookup_cpuinfo(buf, "vendor",     info.cpu_info.vendor, SYS_STRLEN_1)) ;
@@ -98,13 +99,35 @@ static void get_cpuinfo(void) {
 	if(*freq)
 		info.cpu_info.freq = strtod(freq, NULL);	
 	
-	// get number of cpus	
+	// get number of cpus and freq max min 
 	for(;;) {
 		snprintf(path, FILENAME_MAX, PATH_SYS_SYSTEM "/cpu/cpu%d", info.cpu_info.cpus);
-		if(access(path, F_OK) == 0)
+		if(access(path, F_OK) == 0) 
 			info.cpu_info.cpus++;
 		else
 			break;
+	}
+		
+	// get freq max min 
+	int val;
+	for(int i = 0; i < info.cpu_info.cpus; i++) {
+		snprintf(path, FILENAME_MAX, PATH_SYS_SYSTEM "/cpu/cpu%d/cpufreq/cpuinfo_max_freq", i);
+		if(access(path, F_OK) == -1)
+			continue;
+		fp = get_file(path);
+		fscanf(fp, "%d", &val);		
+		if(info.cpu_info.freq_max < (val / 1000))
+			info.cpu_info.freq_max = (val / 1000);
+		if(fclose(fp) == -1)
+			err_sys("fclose failed");
+		
+		snprintf(path, FILENAME_MAX, PATH_SYS_SYSTEM "/cpu/cpu%d/cpufreq/cpuinfo_min_freq", i);
+		fp = get_file(path);
+		fscanf(fp, "%d", &val);		
+		if(info.cpu_info.freq_min > (val / 1000))
+			info.cpu_info.freq_min = (val / 1000);
+		if(fclose(fp) == -1)
+			err_sys("fclose failed");
 	}
 	
 	// get temperature
@@ -159,7 +182,7 @@ static FILE*
 get_file(const char *path) {
 	FILE* fp;
 	if((fp = fopen(path, "r")) == NULL)
-		err_sys("popen failed");
+		err_sys("fopen failed");
 	
 	return fp;
 }
@@ -226,6 +249,8 @@ sys_manager_dump_string(char *buf, size_t len) {
 			   "\tmodel:        %s\n"
 			   "\tcpus:         %d\n"			
 			   "\tfreq MHz:     %.3f\n"
+			   "\tfreq_max MHz: %.3f\n"
+			   "\tfreq_min MHz: %.3f\n"
 			   "\ttempereature: %.1f, %.1f\n"
 			   "\tloads:        %lu, %lu, %lu\n"
 			"memory:\n"
@@ -240,7 +265,7 @@ sys_manager_dump_string(char *buf, size_t len) {
 			info.cpu_info.vendor,
 			info.cpu_info.model,
 			info.cpu_info.cpus,
-			info.cpu_info.freq,
+			info.cpu_info.freq, info.cpu_info.freq_max, info.cpu_info.freq_min,
 			info.cpu_info.temperature, info.cpu_info.temperature_max,
 			info.cpu_info.loads[0], info.cpu_info.loads[1], info.cpu_info.loads[2],
 			info.mem_info.totalram,
