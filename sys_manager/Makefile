@@ -6,7 +6,7 @@ PROGS  := main
 all: $(PROGS)
 
 main: sys_manager.o main.o
-	gcc  $^ -o $@
+	gcc  $^ -o $@ -lsensors
 main.o: main.c
 	gcc $(CFLAGS) -c $^
 sys_manager.o: sys_manager.c
