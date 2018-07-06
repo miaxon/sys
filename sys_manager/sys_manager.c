@@ -1,6 +1,7 @@
 #include <sys/sysinfo.h>
 #include <sensors/sensors.h>
 #include <sensors/error.h>
+#include <sys/statvfs.h>
 #include <ctype.h>
 #include <error.h>
 #include <stdio.h>
@@ -8,12 +9,13 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/utsname.h>
+#include <dirent.h>
 #include "sys_manager.h"
 //#include "chips.h"
 
 #define PATH_PROC_CPUINFO "/proc/cpuinfo"
 #define PATH_SYS_SYSTEM	  "/sys/devices/system"
-#define PATH_SYS_HWMON	  "/sys/class/hwmon"
+#define PATH_SYS_BLOCK	  "/sys/block"
 
 
 static void err_sys (const char* msg){perror(msg); exit(1);}
@@ -23,12 +25,13 @@ static void err_exit(const char* msg){perror(msg); exit(1);}
 
 static sys_info_t info;
 
-static FILE* cmd_out (const char *cmd);
-static FILE* get_file(const char *cmd);
+static FILE* sys_manager_cmdout (const char *cmd);
+static FILE* sys_manager_getfile(const char *cmd);
 
-static void get_cpuinfo(void);
-static void get_osinfo (void);
-static void get_sysinfo(void);
+static void sys_manager_cpuinfo (void);
+static void sys_manager_osinfo  (void);
+static void sys_manager_sysinfo (void);
+static void sys_manager_diskinfo(void);
 
 /* Lookup a pattern and get the value from cpuinfo.
  * Format is:
@@ -64,7 +67,7 @@ lookup_cpuinfo(char *line, char *pattern, char *value, size_t size)
 	return 1;
 }
 
-static FILE* cmd_out(const char *cmd) {
+static FILE* sys_manager_cmdout(const char *cmd) {
 	FILE* fp;
 	if((fp = popen(cmd, "r")) == NULL)
 		err_sys("popen failed");
@@ -74,14 +77,14 @@ static FILE* cmd_out(const char *cmd) {
 
 
 
-static void get_cpuinfo(void) {
+static void sys_manager_cpuinfo(void) {
 	// parse cpuinfo
 	FILE* fp;
 	char buf [SYS_STRLEN_1];
 	char freq[SYS_STRLEN_1];
 	char path[FILENAME_MAX];
 	
-	fp = get_file(PATH_PROC_CPUINFO);
+	fp = sys_manager_getfile(PATH_PROC_CPUINFO);
 	
 	while(fgets(buf, sizeof(buf), fp) != NULL) {
 		     if (lookup_cpuinfo(buf, "vendor",     info.cpu_info.vendor, SYS_STRLEN_1)) ;
@@ -114,7 +117,7 @@ static void get_cpuinfo(void) {
 		snprintf(path, FILENAME_MAX, PATH_SYS_SYSTEM "/cpu/cpu%d/cpufreq/cpuinfo_max_freq", i);
 		if(access(path, F_OK) == -1)
 			continue;
-		fp = get_file(path);
+		fp = sys_manager_getfile(path);
 		fscanf(fp, "%d", &val);		
 		if(info.cpu_info.freq_max < (val / 1000))
 			info.cpu_info.freq_max = (val / 1000);
@@ -125,7 +128,7 @@ static void get_cpuinfo(void) {
 		snprintf(path, FILENAME_MAX, PATH_SYS_SYSTEM "/cpu/cpu%d/cpufreq/cpuinfo_min_freq", i);
 		if(access(path, F_OK) == -1)
 			continue;
-		fp = get_file(path);
+		fp = sys_manager_getfile(path);
 		fscanf(fp, "%d", &val);		
 		if(info.cpu_info.freq_min > (val / 1000) || info.cpu_info.freq_min == 0)
 			info.cpu_info.freq_min = (val / 1000);
@@ -180,9 +183,64 @@ static void get_cpuinfo(void) {
 		}
 		break; // only first chip!
 	}
+	sensors_cleanup();
+}
+static void sys_manager_diskinfo(void) {
+	// get disks
+	DIR *dp;
+	struct dirent *de;
+	char path[FILENAME_MAX];
+	
+	if((dp = opendir(PATH_SYS_BLOCK)) == NULL)
+		err_sys("Could not list block interface directory");
+	int i = 0;
+	while((de = readdir(dp))) {
+		disk_info_t *di = &info.disks.items[i];		
+		strncpy(di->name, de->d_name, SYS_STRLEN_2 - 1);
+		
+		snprintf(path, FILENAME_MAX, "%s/%s/device/model", PATH_SYS_BLOCK, di->name );
+		if(access(path, F_OK) == 0) {
+			FILE* fp = sys_manager_getfile(path);
+			char val[SYS_STRLEN_1];
+			fscanf(fp, "%s", val);
+			strncpy(di->model, val, SYS_STRLEN_1 - 1);
+			
+			if(fclose(fp) == -1)
+				err_sys("fclose failed");
+		}
+		
+		unsigned int sec_size = 0;
+		snprintf(path, FILENAME_MAX, "%s/%s/queue/hw_sector_size", PATH_SYS_BLOCK, di->name );
+		if(access(path, F_OK) == 0) {
+			FILE* fp = sys_manager_getfile(path);
+			unsigned int val;
+			fscanf(fp, "%u", &val);
+			sec_size = val;
+			
+			if(fclose(fp) == -1)
+				err_sys("fclose failed");
+		}
+		
+		unsigned int size = 0;
+		snprintf(path, FILENAME_MAX, "%s/%s/size", PATH_SYS_BLOCK, di->name );
+		if(access(path, F_OK) == 0) {
+			FILE* fp = sys_manager_getfile(path);
+			unsigned long val;
+			fscanf(fp, "%lu", &val);
+			size = val;
+			
+			if(fclose(fp) == -1)
+				err_sys("fclose failed");
+		}
+		
+		di->size = (size * sec_size);// / (1000 * 1000); // Gb
+		printf("%llu %u %u\n\n", di->size, size, sec_size);
+	}
+	closedir(dp);
+	
 }
 static FILE* 
-get_file(const char *path) {
+sys_manager_getfile(const char *path) {
 	FILE* fp;
 	if((fp = fopen(path, "r")) == NULL)
 		err_sys("fopen failed");
@@ -191,7 +249,7 @@ get_file(const char *path) {
 }
 
 static void 
-get_osinfo(void) {
+sys_manager_osinfo(void) {
 	struct utsname uts = {0};
 	if (uname(&uts) == -1)
 		err_sys("uname failed");
@@ -206,7 +264,7 @@ get_osinfo(void) {
 }
 
 static void 
-get_sysinfo(void) {
+sys_manager_sysinfo(void) {
     int err = 0;
     struct sysinfo s_info;
 
@@ -224,9 +282,10 @@ get_sysinfo(void) {
 int
 sys_manager_init(void) {
 	int err = 0;
-	get_sysinfo();
-	get_osinfo();
-	get_cpuinfo();
+	sys_manager_sysinfo ();
+	sys_manager_osinfo  ();
+	sys_manager_cpuinfo ();
+	sys_manager_diskinfo();
 	return err;
 }
 
@@ -261,6 +320,10 @@ sys_manager_dump_string(char *buf, size_t len) {
 			   "\tfreeram:    %lu\n"
 			   "\ttotalswap:  %lu\n"
 			   "\tfreeswap:   %lu\n"
+			"disk:\n"
+			   "\tname:     %s\n"
+			   "\tmodel:    %s\n"
+			   "\tsize:     %llu\n"
 			, 
 			info.uptime,
 			info.os_info.sysname, info.os_info.version, info.os_info.release, info.os_info.machine, info.os_info.nodename,
@@ -274,7 +337,10 @@ sys_manager_dump_string(char *buf, size_t len) {
 			info.mem_info.totalram,
 			info.mem_info.freeram,
 			info.mem_info.totalswap,
-			info.mem_info.freeswap);
+			info.mem_info.freeswap,
+			info.disks.items[0].name,
+			info.disks.items[0].model,
+			info.disks.items[0].size);
 }
 
 int

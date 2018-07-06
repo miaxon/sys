@@ -4,16 +4,38 @@
 #define SYS_STRLEN_1 128
 #define SYS_STRLEN_2 16
 #define SYS_MAX_NET_INTERFACES 64
+#define SYS_MAX_PARTS 64
+#define SYS_MAX_DISKS 64
 
 typedef struct net_info {
     char   hostname[SYS_STRLEN_1];
     char   dev     [SYS_STRLEN_1];
 } net_info_t;
 
+typedef struct part_info {
+    unsigned long size;
+    unsigned long free;
+    char          name  [SYS_STRLEN_2];
+    char          mount [SYS_STRLEN_2];
+} part_info_t;
+
+typedef struct part_list {
+    unsigned int  count;
+    part_info_t   items[SYS_MAX_PARTS];
+}part_list_t;
+
 typedef struct disk_info {
-    unsigned long totalspace;
-    unsigned long freespace;
+    unsigned long long size;
+    char               model[SYS_STRLEN_1];
+    char               name [SYS_STRLEN_2];
+    part_list_t        pats;
 } disk_info_t;
+
+typedef struct disk_list {
+    unsigned int count;
+    disk_info_t  items[SYS_MAX_DISKS];
+}disk_list_t;
+
 
 typedef struct memory_info {
     unsigned long totalram; /* Total usable main memory size */
@@ -49,7 +71,7 @@ typedef struct sys_info {
     os_info_t     os_info;
     memory_info_t mem_info;
     cpu_info_t    cpu_info;
-    disk_info_t   disk_info;
+    disk_list_t   disks;
     net_info_t    net_info;
 } sys_info_t;
 
