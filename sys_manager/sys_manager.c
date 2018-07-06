@@ -252,7 +252,6 @@ static void sys_manager_diskinfo(void) {
 				continue;
 
 			if(strstr(fs->mnt_fsname, di->name)) {
-				//printf("di: %s m: %s cmp: %s\n", di->name, fs->mnt_fsname, strstr(fs->mnt_fsname, di->name));
 				if(statvfs(fs->mnt_dir, &vfs) != 0)
 					err_sys("statvfs failed");
 				part_info_t * pi = &di->parts.items[di->parts.count++];
