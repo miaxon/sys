@@ -123,6 +123,8 @@ static void get_cpuinfo(void) {
 		
 		info.cpu_info.freq_min = 0;
 		snprintf(path, FILENAME_MAX, PATH_SYS_SYSTEM "/cpu/cpu%d/cpufreq/cpuinfo_min_freq", i);
+		if(access(path, F_OK) == -1)
+			continue;
 		fp = get_file(path);
 		fscanf(fp, "%d", &val);		
 		if(info.cpu_info.freq_min > (val / 1000) || info.cpu_info.freq_min == 0)
