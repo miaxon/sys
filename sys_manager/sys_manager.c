@@ -121,10 +121,11 @@ static void get_cpuinfo(void) {
 		if(fclose(fp) == -1)
 			err_sys("fclose failed");
 		
+		info.cpu_info.freq_min = 
 		snprintf(path, FILENAME_MAX, PATH_SYS_SYSTEM "/cpu/cpu%d/cpufreq/cpuinfo_min_freq", i);
 		fp = get_file(path);
 		fscanf(fp, "%d", &val);		
-		if(info.cpu_info.freq_min > (val / 1000))
+		if(info.cpu_info.freq_min > (val / 1000) || info.cpu_info.freq_min == 0)
 			info.cpu_info.freq_min = (val / 1000);
 		if(fclose(fp) == -1)
 			err_sys("fclose failed");
