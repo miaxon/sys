@@ -28,7 +28,7 @@ typedef struct disk_info {
     unsigned long long size;
     char               model[SYS_STRLEN_1];
     char               name [SYS_STRLEN_2];
-    part_list_t        pats;
+    part_list_t        parts;
 } disk_info_t;
 
 typedef struct disk_list {
