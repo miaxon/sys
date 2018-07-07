@@ -27,23 +27,16 @@ static void err_sys(const char* msg) {
 	exit(1);
 }
 
-static void err_exit(const char* msg) {
-	perror(msg);
-	exit(1);
-}
-
-
-
 static sys_info_t info;
 
-static FILE* sys_manager_cmdout(const char *cmd);
+//static FILE* sys_manager_cmdout(const char *cmd);
 static FILE* sys_manager_getfile(const char *cmd);
 
 static void sys_manager_cpuinfo(void);
 static void sys_manager_osinfo(void);
 static void sys_manager_sysinfo(void);
 static void sys_manager_diskinfo(void);
-static void sys_manager_netinfo(void);
+//static void sys_manager_netinfo(void);
 
 /* Lookup a pattern and get the value from cpuinfo.
  * Format is:
@@ -78,13 +71,13 @@ lookup_cpuinfo(char *line, char *pattern, char *value, size_t size) {
 	return 1;
 }
 
-static FILE* sys_manager_cmdout(const char *cmd) {
+/*static FILE* sys_manager_cmdout(const char *cmd) {
 	FILE* fp;
 	if((fp = popen(cmd, "r")) == NULL)
 		err_sys("popen failed");
 
 	return fp;
-}
+}*/
 
 static void sys_manager_cpuinfo(void) {
 	// parse cpuinfo
@@ -224,7 +217,7 @@ sys_manager_getfile(const char *path) {
 	return fp;
 }
 
-static void
+/*static void
 sys_manager_netinfo(void) {
 	int s;
 	struct ifconf conf;
@@ -238,7 +231,7 @@ sys_manager_netinfo(void) {
 		err_sys("ioctl failed");
 	close(s);
 }
-
+ */
 static void
 sys_manager_osinfo(void) {
 	struct utsname uts = {0};
@@ -348,8 +341,8 @@ sys_manager_dump_string(char *buf, size_t len) {
 			snprintf(&buf[l], len - l,
 					"\t  name: %s\n"
 					"\t  mount: %s\n"
-					"\t  size: %llu\n"
-					"\t  free: %llu\n"
+					"\t  size: %lu\n"
+					"\t  free: %lu\n"
 					,
 					info.disks.items[i].parts.items[j].name,
 					info.disks.items[i].parts.items[j].mount,

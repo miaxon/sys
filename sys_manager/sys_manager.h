@@ -7,10 +7,10 @@
 #define SYS_MAX_PARTS 64
 #define SYS_MAX_DISKS 64
 
-typedef struct net_info {
+/*typedef struct net_info {
     char   hostname[SYS_STRLEN_1];
     char   dev     [SYS_STRLEN_1];
-} net_info_t;
+} net_info_t;*/
 
 typedef struct part_info {
     unsigned long size;
@@ -72,7 +72,7 @@ typedef struct sys_info {
     memory_info_t mem_info;
     cpu_info_t    cpu_info;
     disk_list_t   disks;
-    net_info_t    net_info;
+    //net_info_t    net_info;
 } sys_info_t;
 
 
