@@ -201,7 +201,7 @@ static void sys_manager_diskinfo(void) {
 				strncpy(pi->name, fs->mnt_dir, sizeof pi->name);
 				strncpy(pi->mount, fs->mnt_fsname, sizeof pi->mount);
 				pi->free = vfs.f_bavail * vfs.f_bsize / (1000 * 1000 * 1000);
-				pi->size = vfs.f_blocks * vfs.f_bsize / (1000 * 1000 * 1000);
+				pi->size = vfs.f_blocks * vfs.f_frsize / (1000 * 1000 * 1000);
 			}
 		}
 		endmntent(fp);
@@ -436,7 +436,7 @@ sys_manager_update(void) {
 			if(statvfs(pi->name, &vfs) != 0)
 				err_sys("statvfs failed");
 			pi->free = vfs.f_bavail * vfs.f_bsize / (1000 * 1000 * 1000);
-			pi->size = vfs.f_blocks * vfs.f_bsize / (1000 * 1000 * 1000);
+			pi->size = vfs.f_blocks * vfs.f_frsize / (1000 * 1000 * 1000);
 		}
 	}
 
