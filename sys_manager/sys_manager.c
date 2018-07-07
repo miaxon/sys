@@ -12,8 +12,11 @@
 #include <unistd.h>
 #include <sys/utsname.h>
 #include <dirent.h>
+#include <sys/ioctl.h>
+#include <net/if.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
 #include "sys_manager.h"
-//#include "chips.h"
 
 #define PATH_PROC_CPUINFO "/proc/cpuinfo"
 #define PATH_SYS_SYSTEM   "/sys/devices/system"
@@ -40,6 +43,7 @@ static void sys_manager_cpuinfo(void);
 static void sys_manager_osinfo(void);
 static void sys_manager_sysinfo(void);
 static void sys_manager_diskinfo(void);
+static void sys_manager_netinfo(void);
 
 /* Lookup a pattern and get the value from cpuinfo.
  * Format is:
@@ -276,6 +280,21 @@ sys_manager_getfile(const char *path) {
 }
 
 static void
+sys_manager_netinfo(void) {
+	int s;
+	struct ifconf conf;
+	if((s = socket(PF_INET, SOCK_DGRAM, IPPROTO_IP)) == -1)
+		err_sys("Could not get socket");
+
+	conf.ifc_buf = (char*)malloc(sizeof (struct ifreq) * SYS_MAX_NET_INTERFACES);
+	conf.ifc_len = sizeof (struct ifreq) * SYS_MAX_NET_INTERFACES;
+	memset(conf.ifc_buf, 0, conf.ifc_len);
+	if(ioctl((long)s, SIOCGIFCONF, &conf) == -1)
+		err_sys("ioctl failed");
+	close(s);
+}
+
+static void
 sys_manager_osinfo(void) {
 	struct utsname uts = {0};
 
@@ -314,7 +333,7 @@ sys_manager_init(void) {
 	sys_manager_osinfo();
 	sys_manager_cpuinfo();
 	sys_manager_diskinfo();
-
+	//sys_manager_netinfo();
 	return err;
 }
 
@@ -351,15 +370,7 @@ sys_manager_dump_string(char *buf, size_t len) {
 			"\tfreeram:    %lu\n"
 			"\ttotalswap:  %lu\n"
 			"\tfreeswap:   %lu\n"
-			"disk:\n"
-			"\tname:     %s\n"
-			"\tmodel:    %s\n"
-			"\tsize:     %llu\n"
-			"\tparts:\n"
-			"\t\tname: %s\n"
-			"\t\tmount: %s\n"
-			"\t\tsize: %llu\n"
-			"\t\tfree: %llu\n"
+			"disk: %d"
 			,
 			info.uptime,
 			info.os_info.sysname, info.os_info.version, info.os_info.release, info.os_info.machine, info.os_info.nodename,
@@ -374,13 +385,33 @@ sys_manager_dump_string(char *buf, size_t len) {
 			info.mem_info.freeram,
 			info.mem_info.totalswap,
 			info.mem_info.freeswap,
-			info.disks.items[0].name,
-			info.disks.items[0].model,
-			info.disks.items[0].size,
-			info.disks.items[0].parts.items[0].name,
-			info.disks.items[0].parts.items[0].mount,
-			info.disks.items[0].parts.items[0].size,
-			info.disks.items[0].parts.items[0].free);
+			info.disks.count);
+	for(int i = 0; i < info.disks.count; i++) {
+		int l = strlen(buf);
+		snprintf(&buf[l], len - l,
+				"\n\tname:     %s\n"
+				"\tmodel:    %s\n"
+				"\tsize:     %llu\n"
+				"\tparts:    %d\n"
+				,
+				info.disks.items[i].name,
+				info.disks.items[i].model,
+				info.disks.items[i].size,
+				info.disks.items[i].parts.count);
+		for(int j = 0; j < info.disks.items[i].parts.count; j++) {
+			int l = strlen(buf);
+			snprintf(&buf[l], len - l,
+					"\t  name: %s\n"
+					"\t  mount: %s\n"
+					"\t  size: %llu\n"
+					"\t  free: %llu\n"
+					,
+					info.disks.items[i].parts.items[j].name,
+					info.disks.items[i].parts.items[j].mount,
+					info.disks.items[i].parts.items[j].size,
+					info.disks.items[i].parts.items[j].free);
+		}
+	}
 }
 
 int
