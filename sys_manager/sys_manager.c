@@ -196,6 +196,7 @@ static void sys_manager_diskinfo(void) {
 			if(strstr(fs->mnt_fsname, di->name)) {
 				if(statvfs(fs->mnt_dir, &vfs) != 0)
 					err_sys("statvfs failed");
+
 				part_info_t * pi = &di->parts.items[di->parts.count++];
 				strncpy(pi->name, fs->mnt_dir, sizeof pi->name);
 				strncpy(pi->mount, fs->mnt_fsname, sizeof pi->mount);
@@ -355,7 +356,7 @@ sys_manager_dump_string(char *buf, size_t len) {
 int
 sys_manager_update(void) {
 	sys_manager_sysinfo();
-	sys_manager_diskinfo();
+	//sys_manager_diskinfo();
 	int err = 0;
 	// upadte cpuinfo
 	FILE* fp;
@@ -425,5 +426,19 @@ sys_manager_update(void) {
 		break; // only first chip!
 	}
 	sensors_cleanup();
+
+	// update disk usage
+	struct statvfs vfs;
+	for(int i = 0; i < info.disks.count; i++) {
+		disk_info_t *di = &info.disks.items[i];
+		for(int j = 0; j < di->parts.count; j++) {
+			part_info_t *pi = &di->parts.items[j];
+			if(statvfs(pi->name, &vfs) != 0)
+				err_sys("statvfs failed");
+			pi->free = vfs.f_bavail * vfs.f_bsize / (1000 * 1000 * 1000);
+			pi->size = vfs.f_blocks * vfs.f_bsize / (1000 * 1000 * 1000);
+		}
+	}
+
 	return err;
 }
