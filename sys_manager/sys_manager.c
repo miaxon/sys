@@ -90,7 +90,6 @@ static void sys_manager_cpuinfo(void) {
 	// parse cpuinfo
 	FILE* fp;
 	char buf [SYS_STRLEN_1];
-	char freq[SYS_STRLEN_1];
 	char path[FILENAME_MAX];
 
 	fp = sys_manager_getfile(PATH_PROC_CPUINFO);
@@ -99,7 +98,6 @@ static void sys_manager_cpuinfo(void) {
 		if(lookup_cpuinfo(buf, "vendor", info.cpu_info.vendor, SYS_STRLEN_1));
 		else if(lookup_cpuinfo(buf, "vendor_id", info.cpu_info.vendor, SYS_STRLEN_1));
 		else if(lookup_cpuinfo(buf, "model name", info.cpu_info.model, SYS_STRLEN_1));
-		else if(lookup_cpuinfo(buf, "cpu MHz", freq, SYS_STRLEN_1));
 		else
 			continue;
 	}
@@ -107,11 +105,7 @@ static void sys_manager_cpuinfo(void) {
 	if(fclose(fp) == -1)
 		err_sys("fclose failed");
 
-	// convert freq to double
-	if(*freq)
-		info.cpu_info.freq = strtod(freq, NULL);
-
-	// get number of cpus and freq max min
+	// get number of cpus
 	for(;;) {
 		snprintf(path, FILENAME_MAX, PATH_SYS_SYSTEM "/cpu/cpu%d", info.cpu_info.cpus);
 		if(access(path, F_OK) == 0)
@@ -144,55 +138,6 @@ static void sys_manager_cpuinfo(void) {
 		if(fclose(fp) == -1)
 			err_sys("fclose failed");
 	}
-
-	// get temperature
-	sensors_init(NULL);
-	const sensors_chip_name *chip;
-	int chip_nr;
-
-	chip_nr = 0;
-	while((chip = sensors_get_detected_chips(NULL, &chip_nr))) {
-
-		if(chip->bus.type != SENSORS_BUS_TYPE_ISA) // only ISA chips needed
-			continue;
-
-		int a, b, err;
-		const sensors_feature *feature;
-		const sensors_subfeature *sub;
-		//char *label;
-		double val;
-
-		a = 0;
-		while((feature = sensors_get_features(chip, &a))) {
-			/*if (!(label = sensors_get_label(chip, feature))) {
-				fprintf(stderr, "ERROR: Can't get label of feature "
-					"%s!\n", feature->name);
-				continue;
-			}
-			printf("%s:\n", label);
-			free(label);*/
-
-			b = 0;
-			while((sub = sensors_get_all_subfeatures(chip, feature, &b))) {
-				if(sub->flags & SENSORS_MODE_R) {
-					if((err = sensors_get_value(chip, sub->number, &val)))
-						fprintf(stderr, "ERROR: Can't get "
-							"value of subfeature %s: %s\n",
-							sub->name,
-							sensors_strerror(err));
-					else {
-						//printf("  %s: %.3f\n", sub->name, val);
-						if(strstr(sub->name, "temp") && strstr(sub->name, "_input"))
-							info.cpu_info.temperature = val;
-						if(strstr(sub->name, "temp") && strstr(sub->name, "_max"))
-							info.cpu_info.temperature_max = val;
-					}
-				}
-			}
-		}
-		break; // only first chip!
-	}
-	sensors_cleanup();
 }
 
 static void sys_manager_diskinfo(void) {
@@ -416,6 +361,76 @@ sys_manager_dump_string(char *buf, size_t len) {
 
 int
 sys_manager_update(void) {
+	sys_manager_sysinfo();
+	sys_manager_diskinfo();
 	int err = 0;
+	// upadte cpuinfo
+	FILE* fp;
+	char buf [SYS_STRLEN_1];
+	char freq[SYS_STRLEN_2];
+
+	fp = sys_manager_getfile(PATH_PROC_CPUINFO);
+
+	while(fgets(buf, sizeof (buf), fp) != NULL) {
+		if(lookup_cpuinfo(buf, "cpu MHz", freq, SYS_STRLEN_2));
+		else
+			continue;
+	}
+
+	if(fclose(fp) == -1)
+		err_sys("fclose failed");
+
+	// convert freq to double
+	if(*freq)
+		info.cpu_info.freq = strtod(freq, NULL);
+
+	// get temperature
+	sensors_init(NULL);
+	const sensors_chip_name *chip;
+	int chip_nr;
+
+	chip_nr = 0;
+	while((chip = sensors_get_detected_chips(NULL, &chip_nr))) {
+
+		if(chip->bus.type != SENSORS_BUS_TYPE_ISA) // only ISA chips needed
+			continue;
+
+		int a, b, err;
+		const sensors_feature *feature;
+		const sensors_subfeature *sub;
+		//char *label;
+		double val;
+
+		a = 0;
+		while((feature = sensors_get_features(chip, &a))) {
+			/*if (!(label = sensors_get_label(chip, feature))) {
+				fprintf(stderr, "ERROR: Can't get label of feature "
+					"%s!\n", feature->name);
+				continue;
+			}
+			printf("%s:\n", label);
+			free(label);*/
+
+			b = 0;
+			while((sub = sensors_get_all_subfeatures(chip, feature, &b))) {
+				if(sub->flags & SENSORS_MODE_R) {
+					if((err = sensors_get_value(chip, sub->number, &val)))
+						fprintf(stderr, "ERROR: Can't get "
+							"value of subfeature %s: %s\n",
+							sub->name,
+							sensors_strerror(err));
+					else {
+						//printf("  %s: %.3f\n", sub->name, val);
+						if(strstr(sub->name, "temp") && strstr(sub->name, "_input"))
+							info.cpu_info.temperature = val;
+						if(strstr(sub->name, "temp") && strstr(sub->name, "_max"))
+							info.cpu_info.temperature_max = val;
+					}
+				}
+			}
+		}
+		break; // only first chip!
+	}
+	sensors_cleanup();
 	return err;
 }
