@@ -23,11 +23,26 @@
 
 #define SECTION_END "EndSection\n\n"
 
-#define SECTION_LAYOUT \ 
+#define SECTION_LAYOUT \
 "Section \"ServerLayout\"\n"\
 "    Identifier    \"Layout0\"\n"\
 "    InputDevice   \"Keyboard0\" \"CoreKeyboard\"\n"\
 "    InputDevice   \"Mouse0\"    \"CorePointer\"\n"
+
+#define SECTION_INPUT_DEVICE \
+"Section \"InputDevice\"\n"\
+"    Identifier     \"Mouse0\"\n"\
+"    Driver         \"mouse\"\n"\
+"    Option         \"Protocol\" \"auto\"\n"\
+"    Option         \"Device\" \"/dev/input/mice\"\n"\
+"    Option         \"Emulate3Buttons\" \"no\"\n"\
+"    Option         \"ZAxisMapping\" \"4 5\"\n"\
+"EndSection\n"\
+"Section \"InputDevice\"\n"\
+"    Identifier     \"Keyboard0\"\n"\
+"    Driver         \"kbd\"\n"\
+"EndSection\n"
+
 
 #define SECTION_MONITOR \
 "Section \"Monitor\"\n"\
@@ -139,6 +154,7 @@ int main() {
 	}
 	pci_cleanup(pciaccess);
 	
+	fputs(SECTION_INPUT_DEVICE, fp);	
 	fputs(SECTION_LAYOUT, fp);
 	
 	for (int i = 0; i < N; i++) {
