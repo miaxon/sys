@@ -19,7 +19,7 @@
 #define DRIVER_NVIDIA "nvidia"
 #define DRIVER_AMD	  "amdgpu"
 
-#define XCONF_PATH "./xorg.conf"
+#define XCONF_PATH "/etc/X11/xorg.conf"
 
 #define SECTION_END "EndSection\n\n"
 
